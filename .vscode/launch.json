@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug chatbot",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/src/chatbot/index.ts",
+      "runtimeArgs": ["-r", "ts-node/register", "--env-file=.env"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal"
+    }
+  ]
+}
