@@ -73,7 +73,7 @@ async function queryEmbeddings(question: string) {
   const embeddingResult = await client.embeddings.create({
     model: "text-embedding-3-small",
     input: question,
-    dimensions: 1024
+    dimensions: 1024,
   });
   const firstEmbeddingResult = embeddingResult.data[0].embedding;
   const queryResult = await pcIndex.query({
@@ -81,11 +81,36 @@ async function queryEmbeddings(question: string) {
     includeMetadata: true,
     includeValues: true,
     vector: firstEmbeddingResult,
-    
   });
-  return queryResult
+  return queryResult;
 }
 
-const question = " What does ALexandra likes to do in her free time?"
-console.log(await queryEmbeddings(question));
- 
+// const question = " What does ALexandra likes to do in her free time?";
+// console.log(await queryEmbeddings(question));
+
+async function askOpenAI(question: string, relevantInfo: string) {
+  const response = await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0,
+    messages: [
+      {
+        role: "system",
+        content: `Answer using only this context. If the answer is not in the context, say you don't know.\n\nContext:\n${relevantInfo}`,
+      },
+      { role: "user", content: question },
+    ],
+  });
+  const text = response.choices[0]?.message?.content;
+  console.log(text);
+}
+
+const question = "who does ALexandra likes to do in her free time?";
+// find the embeddings for the question
+const result = await queryEmbeddings(question)
+// get the relevant info in metadata format 
+const relevantInfo = result.matches[0].metadata
+// if the relevant info is found, ask the question to the openai model cos we send relevant info to the model as a second argument
+if (relevantInfo) {
+  // chat gives the answer based on the relevant info
+  askOpenAI(question, relevantInfo.info)
+}
