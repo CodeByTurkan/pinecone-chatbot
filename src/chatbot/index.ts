@@ -48,13 +48,13 @@ const dataToEmbed: Info[] = [
   },
 ];
 
-const pcIndex = pc.index<Info>("search-index");
+const pcIndex = pc.index<Info>("search-index").namespace("search-data");
 
 async function storeEmbeddings() {
   const { data } = await client.embeddings.create({
     model: "text-embedding-3-small",
     input: dataToEmbed.map((d) => d.info),
-    dimensions:1024
+    dimensions: 1024,
   });
 
   const sorted = [...data].sort((a, b) => a.index - b.index);
@@ -67,4 +67,25 @@ async function storeEmbeddings() {
     })),
   });
 }
-storeEmbeddings();
+// storeEmbeddings();
+
+async function queryEmbeddings(question: string) {
+  const embeddingResult = await client.embeddings.create({
+    model: "text-embedding-3-small",
+    input: question,
+    dimensions: 1024
+  });
+  const firstEmbeddingResult = embeddingResult.data[0].embedding;
+  const queryResult = await pcIndex.query({
+    topK: 1,
+    includeMetadata: true,
+    includeValues: true,
+    vector: firstEmbeddingResult,
+    
+  });
+  return queryResult
+}
+
+const question = " What does ALexandra likes to do in her free time?"
+console.log(await queryEmbeddings(question));
+ 
